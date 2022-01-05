@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { Container as DraggContainer, Draggable } from "react-smooth-dnd";
+import { arrayMove } from "react-sortable-hoc";
 import {
   Container,
   Box,
@@ -15,6 +17,7 @@ import DeleteIcon from "@material-ui/icons/Delete";
 const App = () => {
   const [taskTitle, setTaskTitle] = useState("");
   const [tasks, setTasks] = useState([]);
+  const [count, setCount] = useState(0);
 
   const onChangeTaskTitle = (e) => {
     setTaskTitle(e.target.value);
@@ -30,8 +33,10 @@ const App = () => {
       {
         title: taskTitle,
         doing: false,
+        order: count,
       },
     ]);
+    setCount(count + 1);
     resetTextField();
   };
 
@@ -45,6 +50,14 @@ const App = () => {
 
   const isTaskInclude = () => {
     return tasks.some((task) => task.title === taskTitle);
+  };
+
+  const onDrop = ({ removedIndex, addedIndex }) => {
+    const updater = (tasks) =>
+      arrayMove(tasks, removedIndex, addedIndex).map((task, idx) => {
+        return { ...task, order: idx };
+      });
+    setTasks(updater);
   };
 
   return (
@@ -67,19 +80,23 @@ const App = () => {
       </Box>
 
       <List>
-        {tasks.map((t, i) => {
-          return (
-            <ListItem key={i}>
-              <ListItemIcon>
-                <Checkbox edge="start" />
-              </ListItemIcon>
-              <ListItemText primary={t.title} />
-              <Button onClick={() => deleteTasks(t)}>
-                <DeleteIcon />
-              </Button>
-            </ListItem>
-          );
-        })}
+        <DraggContainer onDrop={onDrop}>
+          {tasks.map((t, i) => {
+            return (
+              <Draggable key={i}>
+                <ListItem>
+                  <ListItemIcon>
+                    <Checkbox edge="start" />
+                  </ListItemIcon>
+                  <ListItemText primary={t.title} />
+                  <Button onClick={() => deleteTasks(t)}>
+                    <DeleteIcon />
+                  </Button>
+                </ListItem>
+              </Draggable>
+            );
+          })}
+        </DraggContainer>
       </List>
     </Container>
   );
